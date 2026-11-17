@@ -1,21 +1,3 @@
-"""
-PesoWise - Student Budget Tracker  (app-style interface)
-Python Tkinter Desktop Application
-
-Run:  python main.py
-
-Files
-    main.py       - the graphical user interface (this file)
-    functions.py  - validation, calculations, reports, CSV export
-    database.py   - SQLite storage (create / read / update / delete)
-
-How the screen is organised
-    Sidebar (left)  : logo, "Add Transaction" button, page navigation, extra actions
-    Top bar         : page title and today's date
-    Pages (center)  : Home, Transactions, Budgets, Reports
-    Pop-up forms    : Add/Edit transaction and Set budget (modal dialogs)
-    Toast           : small message at the bottom that fades away by itself
-"""
 import sqlite3
 import tkinter as tk
 from datetime import date, datetime
@@ -29,27 +11,24 @@ from functions import (CATEGORIES, EXPENSE_CATEGORIES, INCOME_CATEGORIES,
                        sample_data, shift_month, spending_by_category,
                        validate_transaction)
 
-# ----------------------------------------------------------------------
-# Colors (calm teal / slate palette, no pure white or neon colors)
-# ----------------------------------------------------------------------
 FONT = "Segoe UI"
 
-BG = "#e9f0f3"            # page background
-CARD = "#fbfdfd"          # cards and list rows
-BORDER = "#d0dde3"        # thin lines around cards
-TRACK = "#dce7ec"         # empty part of progress bars
-ROW_HOVER = "#eef5f7"     # list row under the mouse
+BG = "#e9f0f3"            #
+CARD = "#fbfdfd"         
+BORDER = "#d0dde3"        
+TRACK = "#dce7ec"       
+ROW_HOVER = "#eef5f7"    
 
-TEXT = "#1f3a47"          # main text
-MUTED = "#5d7683"         # secondary text
+TEXT = "#1f3a47"        
+MUTED = "#5d7683"       
 
 SIDEBAR = "#1f3f4d"
 SIDEBAR_HOVER = "#2a5163"
 SIDEBAR_ACTIVE = "#33647a"
 SIDEBAR_SUB = "#bdd2da"
-ACCENT = "#7fd1bb"        # little bar next to the active menu item
+ACCENT = "#7fd1bb"      
 
-HERO = "#27607a"          # big balance card
+HERO = "#27607a"          
 HERO_CHIP = "#357189"
 HERO_SUB = "#cfe3ea"
 
@@ -62,10 +41,10 @@ RED_HOVER = "#8e3a40"
 AMBER = "#a8671a"
 NEUTRAL_BG = "#cfdde3"
 NEUTRAL_HOVER = "#bccfd7"
-LIGHT_BG = "#e6f0f3"      # light button on the dark sidebar
-CHIP_BG = "#dfeaee"       # unselected category chips
-CAL_SELECTED_BG = "#dcebf1"   # selected day in the calendar
-TODAY_BORDER = "#4fa98f"      # outline of today's date in the calendar
+LIGHT_BG = "#e6f0f3"      
+CHIP_BG = "#dfeaee"      
+CAL_SELECTED_BG = "#dcebf1"  
+TODAY_BORDER = "#4fa98f"      
 
 # Soft text colors used on the dark blue balance card
 LEVEL_ON_DARK = {"good": "#a6e3d0", "warn": "#f2d49a", "bad": "#f6b9bc", "neutral": HERO_SUB}
@@ -98,10 +77,6 @@ SORT_OPTIONS = {
 
 MAX_LIST_ROWS = 300       # keep the transaction list fast
 
-
-# ----------------------------------------------------------------------
-# Small helper functions
-# ----------------------------------------------------------------------
 def pretty_date(text):
     """'2026-11-17' -> 'Today' / 'Yesterday' / 'Nov 17, 2026'."""
     try:
@@ -135,10 +110,6 @@ def clear_children(widget):
     for child in widget.winfo_children():
         child.destroy()
 
-
-# ----------------------------------------------------------------------
-# Reusable widgets
-# ----------------------------------------------------------------------
 class FlatButton(tk.Label):
     """A big, flat, colored button (a Label that reacts to the mouse).
     Used instead of tk.Button because tk.Button ignores colors on macOS."""
@@ -289,10 +260,6 @@ class NavItem(tk.Frame):
         self.label.configure(bg=bg, fg=fg, font=font)
         self.indicator.configure(bg=ACCENT if self.active else bg)
 
-
-# ----------------------------------------------------------------------
-# Pop-up forms
-# ----------------------------------------------------------------------
 class PopupBase(tk.Toplevel):
     """Shared behaviour for the pop-up forms: centered, modal, Esc closes."""
 
@@ -350,7 +317,6 @@ class TransactionDialog(PopupBase):
         tk.Label(self, text="Edit transaction" if record else "New transaction",
                  bg=CARD, fg=TEXT, font=(FONT, 16, "bold"), anchor="w").pack(fill="x")
 
-        # --- Expense / Income toggle ---
         toggle = tk.Frame(self, bg=CARD)
         toggle.pack(fill="x", pady=(14, 0))
         toggle.columnconfigure(0, weight=1, uniform="toggle")
@@ -362,7 +328,6 @@ class TransactionDialog(PopupBase):
             button.bind("<Button-1>", lambda event, value=choice: self.set_type(value))
             self.type_buttons[choice] = button
 
-        # --- Amount ---
         self.label("Amount")
         amount_row = tk.Frame(self, bg=CARD)
         amount_row.pack(fill="x")
@@ -372,12 +337,10 @@ class TransactionDialog(PopupBase):
                                       style="Big.TEntry", width=18)
         self.amount_entry.pack(side="left", fill="x", expand=True)
 
-        # --- Category chips ---
         self.label("Category")
         self.chips = ChipGroup(self, CATEGORIES[self.type_var.get()], self.category_var, columns=3)
         self.chips.pack(fill="x")
 
-        # --- Date ---
         self.label("Date (YYYY-MM-DD)")
         date_row = tk.Frame(self, bg=CARD)
         date_row.pack(fill="x")
@@ -389,12 +352,9 @@ class TransactionDialog(PopupBase):
         FlatButton(date_row, "Yesterday", lambda: self.set_date(1), "neutral", "small"
                    ).pack(side="left")
 
-        # --- Description ---
         self.label("Description")
         desc_entry = ttk.Entry(self, textvariable=self.desc_var)
         desc_entry.pack(fill="x")
-
-        # --- Buttons ---
         buttons = tk.Frame(self, bg=CARD)
         buttons.pack(fill="x", pady=(20, 0))
         if record:
@@ -510,7 +470,7 @@ class DatePicker(PopupBase):
         parent = self.parent_dialog
         super().destroy()
         try:
-            parent.grab_set()                 # give control back to the form underneath
+            parent.grab_set()              
         except tk.TclError:
             pass
 
@@ -568,16 +528,9 @@ class BudgetDialog(PopupBase):
         if self.app.remove_budget(self.category_var.get(), self):
             self.destroy()
 
-
-# ----------------------------------------------------------------------
-# The application
-# ----------------------------------------------------------------------
 class BudgetApp:
     """The whole application. Each method does one clear job."""
 
-    # ==================================================================
-    # Setup
-    # ==================================================================
     def __init__(self, root):
         self.root = root
         self.all_rows = []               # every transaction (list of dictionaries)
@@ -677,9 +630,6 @@ class BudgetApp:
                 return
             widget = widget.master
 
-    # ==================================================================
-    # Layout: sidebar, top bar, pages, toast
-    # ==================================================================
     def build_layout(self):
         self.build_sidebar()
         self.main = tk.Frame(self.root, bg=BG)
@@ -752,9 +702,6 @@ class BudgetApp:
         self.title_var.set(PAGE_INFO[key][0])
         self.subtitle_var.set(PAGE_INFO[key][1])
 
-    # ==================================================================
-    # UI helpers
-    # ==================================================================
     def make_card(self, parent, title=None, action_text=None, action=None):
         """A white card with an optional title and a small link on the right."""
         card = tk.Frame(parent, bg=CARD, highlightthickness=1, highlightbackground=BORDER,
@@ -839,16 +786,12 @@ class BudgetApp:
         self.toast_label.place_forget()
         self.toast_job = None
 
-    # ==================================================================
-    # Home page
-    # ==================================================================
     def build_home_page(self):
         page = ScrollFrame(self.content, bg=BG)
         self.pages["home"] = page
         body = tk.Frame(page.inner, bg=BG)
         body.pack(fill="x", padx=26, pady=(0, 20))
 
-        # --- period selector ---
         top = tk.Frame(body, bg=BG)
         top.pack(fill="x", pady=(0, 12))
         tk.Label(top, text="Showing", bg=BG, fg=MUTED, font=(FONT, 10)).pack(side="left")
@@ -893,7 +836,6 @@ class BudgetApp:
         self.stat_card(side, "Savings rate", self.rate_var, savings_hint,
                        GREEN).grid(row=1, column=0, sticky="nsew", pady=(7, 0))
 
-        # --- chart + budgets ---
         middle = tk.Frame(body, bg=BG)
         middle.pack(fill="x", pady=14)
         middle.columnconfigure(0, weight=3, uniform="mid")
@@ -911,7 +853,6 @@ class BudgetApp:
         self.budget_panel = tk.Frame(budget_card, bg=CARD)
         self.budget_panel.pack(fill="both", expand=True)
 
-        # --- recent transactions ---
         recent_card = self.make_card(body, "Recent transactions", "See all",
                                      lambda: self.show_page("transactions"))
         recent_card.pack(fill="x")
@@ -1030,9 +971,6 @@ class BudgetApp:
             bar.pack(fill="x", pady=(4, 0))
             bar.set(percent, LEVEL_COLORS[level])
 
-    # ==================================================================
-    # Transactions page
-    # ==================================================================
     def build_transactions_page(self):
         page = tk.Frame(self.content, bg=BG, padx=26)
         self.pages["transactions"] = page
@@ -1067,7 +1005,6 @@ class BudgetApp:
         tk.Label(page, textvariable=self.count_var, bg=BG, fg=MUTED, anchor="w",
                  font=(FONT, 10)).pack(fill="x", pady=(0, 6))
 
-        # --- the list ---
         card = tk.Frame(page, bg=CARD, highlightthickness=1, highlightbackground=BORDER,
                         highlightcolor=BORDER, padx=10, pady=6)
         card.pack(fill="both", expand=True, pady=(0, 20))
@@ -1119,9 +1056,6 @@ class BudgetApp:
                            f"Out {format_money(summary['expenses'])}   "
                            f"Net {format_money(summary['balance'])}")
 
-    # ==================================================================
-    # Calendar page
-    # ==================================================================
     def build_calendar_page(self):
         page = tk.Frame(self.content, bg=BG, padx=26)
         self.pages["calendar"] = page
@@ -1243,9 +1177,6 @@ class BudgetApp:
             self.day_summary_var.set("Nothing recorded")
             self.empty_state(inner, "No transactions on this day.\nUse the green button to add one.")
 
-    # ==================================================================
-    # Budgets page
-    # ==================================================================
     def build_budgets_page(self):
         page = tk.Frame(self.content, bg=BG, padx=26)
         self.pages["budgets"] = page
@@ -1329,9 +1260,6 @@ class BudgetApp:
         bind_tree(card, "<Button-1>",
                   lambda event, name=category, amount=limit: self.open_budget_dialog(name, amount))
 
-    # ==================================================================
-    # Reports page
-    # ==================================================================
     def build_reports_page(self):
         page = tk.Frame(self.content, bg=BG, padx=26)
         self.pages["reports"] = page
@@ -1357,9 +1285,6 @@ class BudgetApp:
         self.report_text.insert("1.0", build_report_text(self.all_rows))
         self.report_text.config(state="disabled")
 
-    # ==================================================================
-    # Refresh everything
-    # ==================================================================
     def refresh_month_options(self):
         months = available_months(self.all_rows)
         self.dash_month_combo["values"] = ["All time"] + months
@@ -1382,9 +1307,6 @@ class BudgetApp:
         self.refresh_budgets()
         self.refresh_report()
 
-    # ==================================================================
-    # Actions used by the pop-up forms
-    # ==================================================================
     def open_transaction_dialog(self, record=None, default_date=None):
         TransactionDialog(self, record, default_date)
 
@@ -1488,9 +1410,6 @@ class BudgetApp:
         self.notify(f"Budget removed: {category}")
         return True
 
-    # ==================================================================
-    # Sidebar actions
-    # ==================================================================
     def export_transactions(self):
         if not self.all_rows:
             messagebox.showinfo("Nothing to Export", "There are no transactions yet.")

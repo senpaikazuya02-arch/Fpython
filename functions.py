@@ -1,18 +1,9 @@
-"""
-functions.py - Business logic for PesoWise Student Budget Tracker (no Tkinter code in here).
-
-Keeping validation and calculations separate from the GUI makes the code
-easier to read, easier to test, and easier to explain during the defense.
-"""
 import calendar
 import csv
 import math
 from collections import defaultdict
 from datetime import date, datetime
 
-# ----------------------------------------------------------------------
-# Constants
-# ----------------------------------------------------------------------
 CURRENCY = "₱"
 MAX_AMOUNT = 10_000_000
 MAX_DESCRIPTION = 60
@@ -23,18 +14,11 @@ EXPENSE_CATEGORIES = ["Food", "Transport", "School Supplies", "Tuition & Fees",
 INCOME_CATEGORIES = ["Allowance", "Part-time Job", "Scholarship", "Freelance",
                      "Gift", "Other Income"]
 
-# Category names used by the older (general) version -> new student names.
-# database.init_db() uses this so old records keep working.
 CATEGORY_RENAMES = {"School": "School Supplies", "Salary": "Part-time Job",
                     "Business": "Freelance"}
 
-# Dictionary: transaction type -> list of allowed categories
 CATEGORIES = {"Expense": EXPENSE_CATEGORIES, "Income": INCOME_CATEGORIES}
 
-
-# ----------------------------------------------------------------------
-# Formatting helpers
-# ----------------------------------------------------------------------
 def format_money(value):
     """Return a peso string such as ₱1,250.50 (negatives become -₱1,250.50)."""
     sign = "-" if value < 0 else ""
@@ -45,10 +29,6 @@ def format_money_short(value):
     """Peso string without centavos, for small spaces such as ₱1,250."""
     return f"{CURRENCY}{value:,.0f}"
 
-
-# ----------------------------------------------------------------------
-# Validation
-# ----------------------------------------------------------------------
 def parse_amount(text):
     """
     Convert user text to a positive float.
@@ -76,9 +56,8 @@ def validate_transaction(date_text, ttype, category, amount_text, description):
     """
     errors = []
     date_text = date_text.strip()
-    description = " ".join(description.split())      # trim + collapse spaces
+    description = " ".join(description.split())   
 
-    # --- Date ---
     if date_text == "":
         errors.append("Date is required.")
     else:
@@ -90,7 +69,6 @@ def validate_transaction(date_text, ttype, category, amount_text, description):
             errors.append("Date must be a real date in YYYY-MM-DD format "
                           "(example: 2026-11-17).")
 
-    # --- Type and category ---
     if ttype not in CATEGORIES:
         errors.append("Please choose Income or Expense.")
     if category == "":
@@ -98,12 +76,10 @@ def validate_transaction(date_text, ttype, category, amount_text, description):
     elif ttype in CATEGORIES and category not in CATEGORIES[ttype]:
         errors.append(f"'{category}' is not a valid {ttype} category.")
 
-    # --- Amount ---
     amount, amount_error = parse_amount(amount_text)
     if amount_error:
         errors.append(amount_error)
 
-    # --- Description ---
     if description == "":
         errors.append("Description is required.")
     elif len(description) > MAX_DESCRIPTION:
@@ -114,10 +90,6 @@ def validate_transaction(date_text, ttype, category, amount_text, description):
     return {"date": date_text, "type": ttype, "category": category,
             "description": description, "amount": amount}, []
 
-
-# ----------------------------------------------------------------------
-# Data processing / calculations
-# ----------------------------------------------------------------------
 def compute_summary(rows):
     """
     Totals for a list of transaction dictionaries.
@@ -126,7 +98,7 @@ def compute_summary(rows):
     """
     income = 0.0
     expenses = 0.0
-    for row in rows:                                  # loop + conditional
+    for row in rows:                         
         if row["type"] == "Income":
             income += row["amount"]
         else:
@@ -214,10 +186,6 @@ def budget_status(spent, limit):
         return percent, "near", "Near limit"
     return percent, "ok", "On track"
 
-
-# ----------------------------------------------------------------------
-# Reports and export
-# ----------------------------------------------------------------------
 def build_report_text(rows, generated=None):
     """Create a plain-text financial report from a list of transactions."""
     generated = generated or datetime.now()
@@ -294,10 +262,6 @@ def export_csv(path, rows):
             writer.writerow([row["id"], row["date"], row["type"], row["category"],
                              row["description"], f"{row['amount']:.2f}"])
 
-
-# ----------------------------------------------------------------------
-# Sample data (for demonstrations and screenshots)
-# ----------------------------------------------------------------------
 def sample_data(today=None):
     """Return realistic records for the last 3 months."""
     today = today or date.today()
@@ -319,7 +283,7 @@ def sample_data(today=None):
         (18, "Expense", "Health", "Vitamins", 260),
         (20, "Expense", "Shopping", "New shirt", 600),
     ]
-    factors = [1.0, 0.92, 1.08]          # small variation per month
+    factors = [1.0, 0.92, 1.08]         
     records = []
     for back in range(3):
         year, month = today.year, today.month - back
